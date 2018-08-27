@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -15,6 +16,7 @@ type tool struct {
 	Commit     string // eg "3020345802e4bff23902cfc1d19e90a79fae714e"
 	ref        string // eg "origin/master"
 	Fork       string `json:"Fork,omitempty"` // eg "code.jusin.tv/twitch/godep"
+	Out        string `json:"-"`
 }
 
 func (t *tool) path() string {
@@ -156,5 +158,15 @@ func install(t *tool) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to 'go install' tool")
 	}
+
+	if t.Out != "" {
+		base := filepath.Join(toolDirPath, "bin")
+		old := filepath.Join(base, path.Base(t.Repository))
+		new := filepath.Join(base, t.Out)
+		if err := os.Rename(old, new); err != nil {
+			return errors.Wrap(err, "failed to rename tool")
+		}
+	}
+
 	return err
 }
